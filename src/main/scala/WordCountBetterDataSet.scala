@@ -20,22 +20,24 @@ object WordCountBetterDataSet {
       .getOrCreate()
 
     import spark.implicits._
-    val data = spark.read
-      .text("data/book.txt")
+    val book = spark
+      .read
+      .textFile("data/book.txt")
       .as[Book]
 
-    val word = data
-      .select(explode(split($"value", "\\W+")).alias("word")) // default col -> alias
+    /*
+    기존 flat map 대신 explode 라는 함수를 이용하여 list -> row
+    모든 열이 단어를 나타내면 explode는 각 단어를 행에 넣는다.
+    이를 split함수로 분할
+     */
+    val words = book
+      .select(explode(split(lower($"value"), "\\W+")).alias("word"))
       .filter($"word" =!= "")
 
-    val lowerWord = word.select(lower($"word").alias("word"))
-    lowerWord.show()
+    words.show()
 
-    lowerWord.groupBy("word").count().show()
-
-    lowerWord.groupBy("word").count().sort(desc("count")).show()
-
-
+    val wordCount = words.groupBy("word").count().sort(desc("count"))
+    wordCount.show()
 
 
   }
