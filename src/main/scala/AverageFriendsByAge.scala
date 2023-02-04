@@ -32,7 +32,7 @@ object AverageFriendsByAge {
     total.take(10).foreach(println)
     println("---------------------")
     // key = age, value = friends  해당나이, 친구수, 얼마나 많은 사람이 그 나이인지
-    val totalByFriends = total.reduceByKey((x,y) => (x._1 + y._1, x._2 + y._2))
+    val totalByFriends = total.reduceByKey((x, y) => (x._1 + y._1, x._2 + y._2))
     totalByFriends.take(10).foreach(println)
 
     val averagesByAge = totalByFriends.mapValues(x => x._1 / x._2)

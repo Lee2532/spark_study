@@ -3,9 +3,9 @@ import org.apache.spark._
 
 /** Find the maximum temperature by weather station for a year */
 object RegexWordCount {
-  
 
-    /** Our main function where the action happens */
+
+  /** Our main function where the action happens */
   def main(args: Array[String]) {
 
     // Set the log level to only print errors

@@ -12,18 +12,18 @@ import org.apache.spark.sql.functions._
  */
 object MinTemperaturesDataSet {
 
-  case class TempData(stationID: String, date:Int, meas_type: String, temperature: Float)
+  case class TempData(stationID: String, date: Int, meas_type: String, temperature: Float)
 
   def main(args: Array[String]) {
-   
+
     // Set the log level to only print errors
     Logger.getLogger("org").setLevel(Level.ERROR)
 
-  val tempSchema = new StructType()
-    .add("stationID", StringType, nullable = true)
-    .add("date", IntegerType, nullable = true)
-    .add("meas_type", StringType, nullable = true)
-    .add("temperature", FloatType, nullable = true)
+    val tempSchema = new StructType()
+      .add("stationID", StringType, nullable = true)
+      .add("date", IntegerType, nullable = true)
+      .add("meas_type", StringType, nullable = true)
+      .add("temperature", FloatType, nullable = true)
 
     val spark = SparkSession
       .builder()
