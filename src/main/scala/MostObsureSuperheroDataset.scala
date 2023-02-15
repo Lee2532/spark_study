@@ -5,7 +5,14 @@ import org.apache.spark.sql.types.{IntegerType, StringType, StructType}
 
 
 /*
-broadcast를 사용하여 영화이름 표시
+가장 잘 안 알려진 슈퍼히어로 찾기
+사용 데이터 : data/Marvel-names.txt, data/Marvel-graph.txt
+
+1. 각 파일들을 읽어와서 공백 기준으로 스플릿
+2. 마블 그래프 파일을 읽으면서 첫번째 값은 ID, 나머지 값의 합은 value로 처리
+3. ID로 group by 한뒤, value의 값들은 합치기
+4. 마블 네임과 ID로 join 한뒤 value 즉 sum값이 가장 작은것을 호출
+
  */
 
 
@@ -38,15 +45,36 @@ object MostObsureSuperheroDataset {
       .csv("data/Marvel-names.txt")
       .as[HeroNames]
 
+
+
+    val graph = spark.read
+      .textFile("data/Marvel-graph.txt")
+
+
+    graph.map{
+      line =>
+        val key = line.split(" ").head.toInt
+        val value = line.split(" ").tails.length
+        (key, value)
+    }
+      .withColumnRenamed("_1", "id")
+      .groupBy("ID")
+      .agg(sum("_2").alias("COUNT"))
+      .join(names, "id")
+      .sort("COUNT")
+      .show()
+
+
+    /*
     val lines = spark.read
       .text("data/Marvel-graph.txt")
       .as[Hero]
-
 
     val connections = lines
       .withColumn("id", split(col("value"), " ")(0))
       .withColumn("connections", size(split(col("value"), " ")) - 1)
       .groupBy("id").agg(sum("connections").alias("connections"))
+      .sort("connections")
 
     val minConnectionCount = connections.agg(min("connections")).first().getLong(0)
 
@@ -55,7 +83,7 @@ object MostObsureSuperheroDataset {
     connections
       .filter($"connections" === minConnectionCount)
       .join(names, usingColumn = "id")
-      .select("name")
       .show()
+   */
   }
 }

@@ -1,9 +1,7 @@
 import org.apache.log4j._
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.{col, udf}
 import org.apache.spark.sql.types.{IntegerType, StringType, StructType}
 import org.apache.spark.sql.functions._
-import scala.io.{Codec, Source}
 
 
 /*
@@ -11,8 +9,9 @@ import scala.io.{Codec, Source}
 두 히어로 간의 커넥션을 확인하는것
 
 1. 마블 그래프의 첫번째 값은 해당 히어로 ID, 나머지 값은 관련된 히어로의 수로 집계
-2. 이를 마블 네임과 조인하여 히어로 이름 찾기
-3. 가장 많은 커넥션 수를 가진 히어로 순으로 정렬.
+2. ID로 group by 하고, 나머지 값을 모두 합친다.
+3. 이를 마블 네임과 조인하여 히어로 이름 찾기
+4. 가장 많은 커넥션 수를 가진 히어로 순으로 정렬.
  */
 
 
@@ -47,7 +46,6 @@ object MostPopularSuperheroDataset {
 
     val marvelGraph = spark.read
       .textFile("data/Marvel-graph.txt")
-
 
     marvelGraph.map{
       line =>
