@@ -37,34 +37,18 @@ object MovieSimilaritiesDataset {
       .withColumn("yy", col("rating2") * col("rating2"))
       .withColumn("xy", col("rating1") * col("rating2"))
 
-    // Compute numerator, denominator and numPairs columns
-    val calculateSimilarity = pairScores
+    import spark.implicits._
+    val result = pairScores
       .groupBy("movie1", "movie2")
       .agg(
-        sum(col("xy")).alias("numerator"),
-        (sqrt(sum(col("xx"))) * sqrt(sum(col("yy")))).alias("denominator"),
-        count(col("xy")).alias("numPairs")
-      )
+        (sum(col("xy")) / (sqrt(sum(col("xx"))) * sqrt(sum(col("yy"))))
+        ).as("score")
+        , count("xy").as("numPairs")
+      ).as[MoviePairsSimilarity]
 
-    // Calculate score and select only needed columns (movie1, movie2, score, numPairs)
-    import spark.implicits._
-    val result = calculateSimilarity
-      .withColumn("score",
-        when(col("denominator") =!= 0, col("numerator") / col("denominator"))
-          .otherwise(null)
-      ).select("movie1", "movie2", "score", "numPairs").as[MoviePairsSimilarity]
 
     result
   }
-
-  /** Get movie name by given movie id */
-  def getMovieName(movieNames: Dataset[MoviesNames], movieId: Int): String = {
-    val result = movieNames.filter(col("movieID") === movieId)
-      .select("movieTitle").collect()(0)
-
-    result(0).toString
-  }
-
   /** Our main function where the action happens */
   def main(args: Array[String]) {
 
@@ -107,83 +91,34 @@ object MovieSimilaritiesDataset {
       .csv("data/ml-100k/u.data")
       .as[Movies]
 
-
     val moviePairs = movies.as("df1")
       .join(movies.as("df2"), col("df1.userID") === col("df2.userID"))
       .filter(col("df1.movieID") < col("df2.movieID"))
-      .select(col("df1.movieId").as("movie1"),
-        col("df2.movieId").as("movie2"),
-        col("df1.rating").as("rating1"),
-        col("df2.rating").as("rating2")
-      )
-      .as[MoviePairs]
+      .select(col("df1.movieID").as("movie1")
+        , col("df2.movieID").as("movie2")
+        , col("df1.rating").as("rating1")
+        , col("df2.rating").as("rating2")
+      ).as[MoviePairs]
 
-    val moviePairSimilarities = computeCosineSimilarity(spark, moviePairs).cache()
+
+    val CosineSimilarity = computeCosineSimilarity(spark, moviePairs).cache()
+
+    CosineSimilarity.show()
 
     val scoreThreshold = 0.97
     val coOccurrenceThreshold = 50.0
-    print("Enter movieID: ")
-    val movieID = StdIn.readLine().toInt
 
-    val filteredResults = moviePairSimilarities.filter(
-      (col("movie1") === movieID || col("movie2") === movieID) &&
-        col("score") > scoreThreshold && col("numPairs") > coOccurrenceThreshold)
+    val movieID = 45
 
-    // Sort by quality score.
-    filteredResults.sort(col("score").desc).show()
-
-//    val results = filteredResults.sort(col("score").desc).take(10)
-//
-//    println("\nTop 10 similar movies for " + getMovieName(movieNames, movieID))
-//    for (result <- results) {
-//      // Display the similarity result that isn't the movie we're looking at
-//      var similarMovieID = result.movie1
-//      if (similarMovieID == movieID) {
-//        similarMovieID = result.movie2
-//      }
-//      println(getMovieName(movieNames, similarMovieID) + "\tscore: " + result.score + "\tstrength: " + result.numPairs)
-//    }
+    CosineSimilarity
+      .filter(
+        (col("movie1") === movieID || col("movie2") === movieID)
+      && ((col("score") > scoreThreshold) && col("numPairs") > coOccurrenceThreshold)
+      )
+      .join(movieNames, col("movie2") === col("movieID"))
+      .show()
 
 
-    //    val ratings = movies.select("userId", "movieId", "rating")
-    //    // Emit every movie rated together by the same user.
-    //    // Self-join to find every combination.
-    //    // Select movie pairs and rating pairs
-    //    val moviePairs = ratings.as("ratings1")
-    //      .join(ratings.as("ratings2"), $"ratings1.userId" === $"ratings2.userId" && $"ratings1.movieId" < $"ratings2.movieId")
-    //      .select($"ratings1.movieId".alias("movie1"),
-    //        $"ratings2.movieId".alias("movie2"),
-    //        $"ratings1.rating".alias("rating1"),
-    //        $"ratings2.rating".alias("rating2")
-    //      ).as[MoviePairs]
-    //
-    //    val moviePairSimilarities = computeCosineSimilarity(spark, moviePairs).cache()
-    //
-    //
-    //    val scoreThreshold = 0.97
-    //    val coOccurrenceThreshold = 50.0
-    //    print("Enter movieID: ")
-    //    val movieID = StdIn.readLine().toInt
-    //
-    //
-    //    // Filter for movies with this sim that are "good" as defined by
-    //    // our quality thresholds above
-    //    val filteredResults = moviePairSimilarities.filter(
-    //      (col("movie1") === movieID || col("movie2") === movieID) &&
-    //        col("score") > scoreThreshold && col("numPairs") > coOccurrenceThreshold)
-    //
-    //    // Sort by quality score.
-    //    val results = filteredResults.sort(col("score").desc).take(10)
-    //
-    //    println("\nTop 10 similar movies for " + getMovieName(movieNames, movieID))
-    //    for (result <- results) {
-    //      // Display the similarity result that isn't the movie we're looking at
-    //      var similarMovieID = result.movie1
-    //      if (similarMovieID == movieID) {
-    //        similarMovieID = result.movie2
-    //      }
-    //      println(getMovieName(movieNames, similarMovieID) + "\tscore: " + result.score + "\tstrength: " + result.numPairs)
-    //    }
 
   }
 }
