@@ -48,42 +48,22 @@ object MostObsureSuperheroDataset {
 
 
     val graph = spark.read
-      .textFile("data/Marvel-graph.txt")
+      .textFile("log/project.log")
 
+    graph.show()
+//    graph.map{
+//      line =>
+//        val key = line.split(" ").head.toInt
+//        val value = line.split(" ").tails.length
+//        (key, value)
+//    }
+//      .withColumnRenamed("_1", "id")
+//      .groupBy("ID")
+//      .agg(sum("_2").alias("COUNT"))
+//      .join(names, "id")
+//      .sort("COUNT")
+//      .show()
+//
 
-    graph.map{
-      line =>
-        val key = line.split(" ").head.toInt
-        val value = line.split(" ").tails.length
-        (key, value)
-    }
-      .withColumnRenamed("_1", "id")
-      .groupBy("ID")
-      .agg(sum("_2").alias("COUNT"))
-      .join(names, "id")
-      .sort("COUNT")
-      .show()
-
-
-    /*
-    val lines = spark.read
-      .text("data/Marvel-graph.txt")
-      .as[Hero]
-
-    val connections = lines
-      .withColumn("id", split(col("value"), " ")(0))
-      .withColumn("connections", size(split(col("value"), " ")) - 1)
-      .groupBy("id").agg(sum("connections").alias("connections"))
-      .sort("connections")
-
-    val minConnectionCount = connections.agg(min("connections")).first().getLong(0)
-
-    println(minConnectionCount)
-
-    connections
-      .filter($"connections" === minConnectionCount)
-      .join(names, usingColumn = "id")
-      .show()
-   */
   }
 }
