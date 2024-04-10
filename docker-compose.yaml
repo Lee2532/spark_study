@@ -10,3 +10,4 @@ services:
       - MYSQL_ROOT_PASSWORD=mysql
       - MYSQL_USER=mysqluser
       - MYSQL_PASSWORD=mysqlpw
+    restart: always
