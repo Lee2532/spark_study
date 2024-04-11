@@ -44,8 +44,16 @@ object Day_1{
     val connection = java.sql.DriverManager.getConnection(dbUrl, dbProperties)
 
     // Execute SQL queries or perform other database operations here
-    val tableName = "netflix_movie_titels"
+    val tableName = "netflix_movie_titles"
     val df2 = spark.read.jdbc(dbUrl, tableName, dbProperties)
+
+
+
+//    import org.apache.spark.sql.SaveMode
+//
+//    val saveMode = SaveMode.Append
+//    df.write.mode(saveMode).jdbc(url=dbUrl, table="netflix_movie_titles", dbProperties)
+
 
     df2.show()
     // Close the database connection
