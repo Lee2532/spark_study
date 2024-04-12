@@ -34,7 +34,7 @@ object Day_1{
     println("df : ", df.getClass)
 
 
-    val dbUrl = "jdbc:mysql://localhost:3306/spark?useSSL=false&verifyServerCertificate=false"
+    val dbUrl = "jdbc:mysql://localhost:3306/spark?useSSL=false&verifyServerCertificate=false&allowPublicKeyRetrieval=true"
     val dbProperties = new java.util.Properties()
     dbProperties.setProperty("user", "root")
     dbProperties.setProperty("password", "mysql")
@@ -46,16 +46,33 @@ object Day_1{
     // Execute SQL queries or perform other database operations here
     val tableName = "netflix_movie_titles"
     val df2 = spark.read.jdbc(dbUrl, tableName, dbProperties)
-
-
+    println("df2 print")
+    df2.show()
 
 //    import org.apache.spark.sql.SaveMode
 //
 //    val saveMode = SaveMode.Append
 //    df.write.mode(saveMode).jdbc(url=dbUrl, table="netflix_movie_titles", dbProperties)
 
+    val selectSql = "select * from spark.netflix_movie_titles"
 
-    df2.show()
+    val df3 = spark.read.format("jdbc")
+          .option("url", dbUrl)
+          .option("driver", "com.mysql.cj.jdbc.Driver")
+          .option("query", selectSql)
+          .option("user", "root")
+          .option("password", "mysql")
+          .load()
+    println("df3 print")
+    df3.show()
+    Thread.sleep(10000)
+    val df4 = spark.read.jdbc(dbUrl, s"($selectSql) AS query_result", dbProperties)
+
+    println("df4 print")
+    df4.show()
+
+
+
     // Close the database connection
     connection.close()
 
