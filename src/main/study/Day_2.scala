@@ -12,7 +12,8 @@ object Day_2 {
     Logger.getLogger("org").setLevel(Level.ERROR)
 
     val spark = SparkSession.builder()
-      .appName("Spark Study Day 2")
+      .appName("Spark_DAY_2")
+      .config("spark.eventLog.enabled", "true")
       .master("local[*]")
       .getOrCreate()
 
@@ -23,7 +24,7 @@ object Day_2 {
     dbProperties.setProperty("driver", "com.mysql.cj.jdbc.Driver") // Specify the JDBC driver
 
 
-    val query = "select * from spark.netflix_movie_titles"
+    val query = "select * from spark.netflix_movie_titles where year >= 2000"
 
     val dbConn = spark.read.format("jdbc")
       .option("url", dbUrl)
@@ -42,7 +43,7 @@ object Day_2 {
     ds.createTempView("netflix_movie_title")
 
     val qPlan = spark.sql("select * from netflix_movie_title where year > 2000 limit 10")
-
+//    Thread.sleep(50000)
 
     qPlan.explain
     import spark.implicits._
