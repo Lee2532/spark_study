@@ -12,6 +12,7 @@ object Day_1{
 
     val spark = SparkSession.builder()
       .appName("Spark_DAY_1")
+      .config("spark.eventLog.enabled", "true")
       .master("local[*]")
       .getOrCreate()
 

@@ -9,7 +9,7 @@ object Day_2 {
   case class MovieTitle(movieID: Integer, year: Integer, title: String)
 
   def main(args: Array[String]): Unit = {
-    Logger.getLogger("org").setLevel(Level.ERROR)
+    Logger.getLogger("org").setLevel(Level.DEBUG)
 
     val spark = SparkSession.builder()
       .appName("Spark_DAY_2")
@@ -35,6 +35,7 @@ object Day_2 {
       .load()
 
     dbConn.show()
+
     println("-----")
     val ds = spark.read.jdbc(dbUrl, s"($query) AS a", dbProperties)
 
